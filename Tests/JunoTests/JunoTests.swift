@@ -1,11 +1,25 @@
+import Juno
 import XCTest
-@testable import Juno
 
-final class JunoTests: XCTestCase {
+/// Tests for Juno package.
+internal final class JunoTests: XCTestCase {
+    /// Test example.
     func testExample() throws {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct
-        // results.
-        XCTAssertEqual(Juno().text, "Hello, World!")
+        struct TestTableEmpty: Table {}
+        struct TestTable: Table {
+            /// Sample string column.
+            let name: String
+            /// Sample int column.
+            let names: Int64
+        }
+
+        XCTAssertNoThrow(TestTableEmpty())
+        XCTAssertNoThrow(TestTable(name: "JUNO", names: 9))
+
+        let empty = TestTableEmpty()
+        let string = TestTable(name: "JUNO", names: 9)
+
+        XCTAssertEqual(empty.schema.columns, [])
+        XCTAssertEqual(string.schema.columns, ["name", "names"])
     }
 }
