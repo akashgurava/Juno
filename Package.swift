@@ -8,6 +8,12 @@ import PackageDescription
 // swiftlint: disable prefixed_toplevel_constant missing_docs explicit_top_level_acl
 let package = Package(
     name: "Juno",
+    platforms: [
+        .iOS(.v14),
+        .watchOS(.v6),
+        .tvOS(.v11),
+        .macOS(.v11),
+    ],
     products: [
         // Products define the executables and libraries a package produces,
         // and make them visible to other packages.
@@ -23,6 +29,10 @@ let package = Package(
             url: "https://github.com/apple/swift-collections.git",
             .upToNextMajor(from: "1.0.2")
         ),
+        .package(
+            url: "https://github.com/kelvin13/swift-json",
+            .upToNextMajor(from: "0.2.2")
+        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package.
@@ -33,6 +43,7 @@ let package = Package(
             name: "Juno",
             dependencies: [
                 .product(name: "OrderedCollections", package: "swift-collections"),
+                .product(name: "JSON", package: "swift-json"),
             ]
         ),
         .testTarget(

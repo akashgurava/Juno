@@ -1,6 +1,14 @@
 {
     "cSpell.words": [
+        "fclose",
         "fileprivate",
+        "fopen",
+        "fread",
+        "fstat",
+        "fwrite",
+        "IFLNK",
+        "IFMT",
+        "IFREG",
         "swiftlint"
     ]
 }

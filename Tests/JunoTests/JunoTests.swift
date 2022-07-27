@@ -22,4 +22,17 @@ internal final class JunoTests: XCTestCase {
         XCTAssertEqual(empty.schema.columns, [])
         XCTAssertEqual(string.schema.columns, ["name", "names"])
     }
+
+    func testReadJson() throws {
+        struct Greet: Table {
+            let message: [String]
+        }
+        struct Msg: Table {
+            let greet: Greet
+        }
+        let greet = Greet(message: ["sjns"])
+        let msg = Msg(greet: greet)
+        let store = JsonStore(path: "/Users/akash/hello.json")
+        try store.store(object: msg)
+    }
 }
