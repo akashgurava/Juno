@@ -9,6 +9,7 @@
         "IFLNK",
         "IFMT",
         "IFREG",
-        "swiftlint"
+        "swiftlint",
+        "timeit"
     ]
 }

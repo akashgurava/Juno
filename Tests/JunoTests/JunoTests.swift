@@ -24,15 +24,17 @@ internal final class JunoTests: XCTestCase {
     }
 
     func testReadJson() throws {
-        struct Greet: Table {
-            let message: [String]
+        struct Actor: Table {
+            let id: Int
         }
         struct Msg: Table {
-            let greet: Greet
+            let id: String
+            let type: String
+            let actor: Actor
         }
-        let greet = Greet(message: ["sjns"])
-        let msg = Msg(greet: greet)
-        let store = JsonStore(path: "/Users/akash/hello.json")
+        let actor = Actor(id: 22)
+        let msg = Msg(id: "jik", type: "mks", actor: actor)
+        let store = JsonStore(path: "/Users/akash/large-file.json")
         try store.store(object: msg)
     }
 }

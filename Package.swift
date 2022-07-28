@@ -29,10 +29,6 @@ let package = Package(
             url: "https://github.com/apple/swift-collections.git",
             .upToNextMajor(from: "1.0.2")
         ),
-        .package(
-            url: "https://github.com/kelvin13/swift-json",
-            .upToNextMajor(from: "0.2.2")
-        ),
     ],
     targets: [
         // Targets are the basic building blocks of a package.
@@ -43,7 +39,6 @@ let package = Package(
             name: "Juno",
             dependencies: [
                 .product(name: "OrderedCollections", package: "swift-collections"),
-                .product(name: "JSON", package: "swift-json"),
             ]
         ),
         .testTarget(

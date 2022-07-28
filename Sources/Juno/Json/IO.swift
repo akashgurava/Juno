@@ -1,7 +1,7 @@
 import Foundation
 
 /// File open reason.
-internal enum OpenReason: String {
+public enum OpenReason: String {
     /// Read a file.
     case read = "READ"
     /// Write a file.
@@ -9,7 +9,7 @@ internal enum OpenReason: String {
 }
 
 /// File action.
-internal enum Action {
+public enum Action {
     /// Open.
     case fileOpen(reason: OpenReason)
     /// Query.
@@ -21,14 +21,14 @@ internal enum Action {
 }
 
 /// Read error representor.
-internal struct FileError: Error, CustomStringConvertible {
+public struct FileError: Error, CustomStringConvertible {
     /// Path.
     let path: String
     /// Action.
     let action: Action
 
     /// Error description.
-    var description: String {
+    public var description: String {
         switch self.action {
         case let .fileOpen(reason):
             return "Path: \(path). Opening for: \(reason). Could not open file."
@@ -47,12 +47,18 @@ internal struct FileError: Error, CustomStringConvertible {
 }
 
 /// File.
-internal struct File {
+public struct File {
     /// File pointer.
     typealias Descriptor = UnsafeMutablePointer<FILE>
 
     /// Path of file.
     let path: String
+
+    /// Create a file from path.
+    /// - Parameter path: Location of file.
+    public init(path: String) {
+        self.path = path
+    }
 
     /// Get total file size.
     /// - Parameter descriptor: Pointer from beginning of file.
@@ -79,7 +85,7 @@ internal struct File {
 
     /// Read a file as bytes.
     /// - Returns: Byte array.
-    internal func read() throws -> [UInt8] {
+    public func readAsBytes() throws -> [UInt8] {
         guard let descriptor: Descriptor = fopen(path, "rb")
         else {
             throw FileError(path: path, action: .fileOpen(reason: .read))
@@ -107,7 +113,7 @@ internal struct File {
 
     /// Read a file as string.
     /// - Returns: String data.
-    internal func read() throws -> String {
+    public func readAsString() throws -> String {
         guard let descriptor: Descriptor = fopen(path, "rb")
         else {
             throw FileError(path: path, action: .fileOpen(reason: .read))
@@ -136,7 +142,7 @@ internal struct File {
     /// Write data to file.
     /// - Parameters:
     ///   - buffer: Data to write.
-    internal func write(_ buffer: [UInt8]) throws {
+    public func write(_ buffer: [UInt8]) throws {
         guard let descriptor: Descriptor = fopen(path, "wb")
         else {
             throw FileError(path: path, action: .fileOpen(reason: .write))
