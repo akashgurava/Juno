@@ -1,52 +1,76 @@
 import Dispatch
 import Foundation
 
-public struct Timer {
-    private var start: DispatchTime
-    private var end = DispatchTime(uptimeNanoseconds: 0)
-
-    public init() {
-        start = DispatchTime.now()
+// swiftlint: disable file_types_order
+extension Array where Element == UInt64 {
+    var total: Element {
+        self.reduce(.zero, +)
     }
 
-    public mutating func stop() {
-        end = DispatchTime.now()
-    }
-
-    public func getTime() -> UInt64 {
-        if end.uptimeNanoseconds == 0 {
-            print("Warning Timer.stop() never called")
-        }
-        return end.uptimeNanoseconds - start.uptimeNanoseconds
-    }
-
-    public func getTimeAsString() -> String {
-        return formatTime(Double(getTime()))
+    var mean: Double {
+        Double(total) / Double(count)
     }
 }
 
-public func formatTime(precision: Int = 3, _ nanoseconds: Double) -> String {
-    assert(precision > 0)
+// swiftlint: disable file_types_order
+extension Array where Element == Double {
+    var sum: Element {
+        self.reduce(.zero, +)
+    }
 
-    if nanoseconds >= 60e9 {
-        let seconds = UInt64(nanoseconds / 1e9)
-        let parts: [(String, UInt64)] = [
-            ("d", 60 * 60 * 24), ("h", 60 * 60), ("min", 60), ("s", 1),
-        ]
-        var time: [String] = []
-        var leftover = seconds
-        for (suffix, length) in parts {
-            let value = leftover / length
-            if value > 0 {
-                leftover = leftover % length
-                time.append("\(value)\(suffix)")
-            }
-            if leftover < 1 {
-                break
+    var mean: Double {
+        sum / Double(count)
+    }
+}
+
+/// Timer to determine time difference between init and stop.
+public enum Timer {
+    /// Measure a function.
+    /// - Parameter callable: Function
+    /// - Returns: Time taken in nanoseconds.
+    public static func measure(_ callable: () -> Void) -> UInt64 {
+        let start = DispatchTime.now().uptimeNanoseconds
+        callable()
+        return DispatchTime.now().uptimeNanoseconds - start
+    }
+
+    /// Execute function callable, `loops` times.
+    /// And return array of time taken for each loop in nanoseconds.
+    /// - Parameters:
+    ///   - loops: Number of loops to execute.
+    ///   - callable: Function whose time needs to be measured
+    /// - Returns: Array of time taken for each loop.
+    public static func measure(loops: Int, callable: () -> Void) -> [UInt64] {
+        callable()
+        return (0..<loops).map { _ in
+            Self.measure(callable)
+        }
+    }
+
+    /// Suggest optimal number of loops.
+    /// - Parameter callable: Timing function.
+    /// - Returns: Number of loops.
+    public static func suggestLoops(callable: () -> Void) -> Int {
+        for index in 0..<10 {
+            let number = Int(pow(10.0, Double(index)))
+            let timeTaken = Self.measure(loops: number, callable: callable)
+            // Until timeTaken > 1 second
+            if timeTaken.total >= UInt64(1e9) {
+                return index
             }
         }
-        return time.joined(separator: " ")
+        return 1
     }
+}
+
+// swiftlint: disable function_default_parameter_at_end
+/// Format time in nanoseconds to string.
+/// - Parameters:
+///   - precision: Decimal points.
+///   - nanoseconds: Time taken in nanoseconds.
+/// - Returns: Time in ns, µs, ms, s format
+public func formatTime(precision: Int = 3, _ nanoseconds: Double) -> String {
+    assert(precision > 0)
 
     if nanoseconds < 1e3 {
         return String(format: "%.\(precision)g ns", nanoseconds)
@@ -59,46 +83,104 @@ public func formatTime(precision: Int = 3, _ nanoseconds: Double) -> String {
     }
 }
 
+// swiftlint: disable function_default_parameter_at_end
+/// Format time in nanoseconds to string.
+/// - Parameters:
+///   - precision: Decimal points.
+///   - nanoseconds: Time taken in nanoseconds.
+/// - Returns: Time in ns, µs, ms, s format
+public func formatTime(precision: Int = 3, _ nanoseconds: UInt64) -> String {
+    formatTime(precision: precision, Double(nanoseconds))
+}
+
+/// Structure to show Descriptive statistics of Time taken.
 public struct TimeitResult: CustomStringConvertible {
     private let precision: Int
 
+    /// Name of timeit.
     let label: String
+    /// Number of loops per iteration.
     let loops: Int
-    let repetitions: Int
-    let allRuns: [UInt64]
-    let timings: [Double]
+    /// Number of iterations
+    let iterations: Int
+    /// Time taken per loop per iteration.
+    let iterLoopTimes: [[UInt64]]
 
-    let best: Double
-    let worst: Double
-    let sum: Double
+    /// Time taken per iteration.
+    let totalIterTime: [UInt64]
+    /// Mean time taken per loop in a iteration.
+    let meanLoopTimes: [Double]
+
+    /// Time taken for total execution.
+    let total: UInt64
+    /// Mean time taken for a loop in a iteration.
     let mean: Double
+    /// Standard deviation time taken for a loop in a iteration.
     let stdDev: Double
+
+    /// Lowest time taken for a loop in a iteration.
+    let best: Double
+    /// Highest time taken for a loop in a iteration.
+    let worst: Double
+
+    /// Difference between.
     let diff: Double
+    /// Warning message to raise in case of caching.
     let warning: String?
 
+    /// String representation.
+    public var description: String {
+        let desc = """
+            \(label): Loops: \(loops). Iterations: \(iterations).
+                Total time taken: \(formatTime(precision: precision, total)). \
+            Mean: \(formatTime(precision: precision, mean)). \
+            Std Dev: \(formatTime(precision: precision, stdDev)).
+                Best: \(formatTime(precision: precision, best)). \
+            Worst: \(formatTime(precision: precision, worst))
+            """
+        if let warning = warning {
+            return "\(desc)\n\(warning)"
+        }
+        return desc
+    }
+
+    /// Create a timeit result.
+    /// - Parameters:
+    ///   - label: Label for callable.
+    ///   - loops: Number of loops.
+    ///   - iterations: Number of iterations.
+    ///   - iterLoopTimes: Time of each loop in each iteration.
+    ///   - precision: Number of decimal places to show
     public init(
         label: String,
         loops: Int,
-        repetitions: Int,
-        allRuns: [UInt64],
+        iterations: Int,
+        iterLoopTimes: [[UInt64]],
         precision: Int
     ) {
-        assert(allRuns.count == repetitions)
-        assert(allRuns.count > 0)
+        assert(iterLoopTimes.count == iterations)
+        assert(!iterLoopTimes.isEmpty)
 
         self.precision = precision
 
         self.label = label
         self.loops = loops
-        self.repetitions = repetitions
-        self.allRuns = allRuns
-        self.timings = allRuns.map { Double($0) / Double(loops) }
+        self.iterations = iterations
+        self.iterLoopTimes = iterLoopTimes
 
-        self.best = Double(allRuns.min()!) / Double(loops)
-        self.worst = Double(allRuns.max()!) / Double(loops)
-        self.sum = timings.reduce(0, +)
-        self.mean = self.sum / Double(timings.count)
-        self.stdDev = 0
+        self.totalIterTime = iterLoopTimes.map { $0.total }
+        self.meanLoopTimes = iterLoopTimes.map { $0.mean }
+
+        self.total = totalIterTime.reduce(0, +)
+        self.mean = meanLoopTimes.mean
+        let mean = meanLoopTimes.mean
+        self.stdDev = sqrt(
+            iterLoopTimes.joined().map { pow(Double($0) - mean, 2) }.reduce(.zero, +)
+                / Double(loops * iterations)
+        )
+
+        self.best = Double(meanLoopTimes.min() ?? 0) / Double(loops)
+        self.worst = Double(meanLoopTimes.max() ?? 0) / Double(loops)
         self.diff = round(worst * 100 / best) / 100
         if diff > 2 {
             self.warning = """
@@ -109,38 +191,6 @@ public struct TimeitResult: CustomStringConvertible {
             self.warning = nil
         }
     }
-
-    public var description: String {
-        guard let warning = warning else {
-            return """
-                \(label): Loops: \(loops). Repetitions: \(repetitions).
-                    Total Time: \(formatTime(precision: precision, sum)).
-                    Mean: \(formatTime(precision: precision, mean)). \
-                StdDev: \(formatTime(precision: precision, stdDev)). \
-                Best: \(formatTime(precision: precision, best)). \
-                Worst: \(formatTime(precision: precision, worst)).
-                """
-        }
-        return """
-            \(label): Loops: \(loops). Repetitions: \(repetitions).
-                Total Time: \(formatTime(precision: precision, sum)).
-                Mean: \(formatTime(precision: precision, mean)). \
-            StdDev: \(formatTime(precision: precision, stdDev)). \
-            Best: \(formatTime(precision: precision, best)). \
-            Worst: \(formatTime(precision: precision, worst)).
-                \(warning)
-            """
-    }
-}
-
-private func getAverageExecutionTime(loops: Int, f: () -> Void) -> UInt64 {
-    f()
-    var timer = Timer()
-    for _ in 0..<loops {
-        f()
-    }
-    timer.stop()
-    return timer.getTime()
 }
 
 /// Times the execution of a function multiple times.
@@ -164,27 +214,20 @@ private func getAverageExecutionTime(loops: Int, f: () -> Void) -> UInt64 {
 ///    - f: The function to time
 public func timeit(
     label: String,
-    loops: Int = 0,
+    loops: Int? = nil,
     repetitions: Int = 7,
     precision: Int = 3,
-    _ f: () -> Void
+    _ callable: () -> Void
 ) {
-    var number = loops
-    if number == 0 {
-        for index in 0..<10 {
-            number = Int(pow(10.0, Double(index)))
-            let time_number = getAverageExecutionTime(loops: number, f: f)
-            if Double(time_number) >= 0.2 * 1e9 {
-                break
-            }
-        }
+    let loops = loops ?? Timer.suggestLoops(callable: callable)
+    let iterLoopTimes: [[UInt64]] = (0..<repetitions).map { _ in
+        Timer.measure(loops: loops, callable: callable)
     }
-    let allRuns: [UInt64] = (0..<repetitions).map({ _ in
-        getAverageExecutionTime(loops: number, f: f)
-    })
     let result = TimeitResult(
         label: label,
-        loops: number, repetitions: repetitions, allRuns: allRuns,
+        loops: loops,
+        iterations: repetitions,
+        iterLoopTimes: iterLoopTimes,
         precision: precision
     )
     print(result)

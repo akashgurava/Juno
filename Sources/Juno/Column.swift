@@ -1,33 +1,34 @@
-import Foundation
+/// Column in a table.
+public struct Column: Equatable {
+    /// Name of column.
+    public let name: String
+    /// Column datatype.
+    public let dtype: DataType.Type
 
-/// A protocol all columns must adhere to.
-public protocol Column: Codable {}
+    /// Create new Column from name and datatype.
+    /// - Parameters:
+    ///   - name: Column name.
+    ///   - dtype: Column datatype.
+    public init(name: String, dtype: DataType.Type) {
+        self.name = name
+        self.dtype = dtype
+    }
 
-extension Bool: Column {}
+    /// Create new column from name and column value.
+    /// - Parameters:
+    ///   - name: Column name.
+    ///   - value: Column value.
+    public init(name: String, value: DataType) {
+        self.name = name
+        self.dtype = type(of: value)
+    }
 
-extension Int: Column {}
-extension Int8: Column {}
-extension Int16: Column {}
-extension Int32: Column {}
-extension Int64: Column {}
-
-extension UInt: Column {}
-extension UInt8: Column {}
-extension UInt16: Column {}
-extension UInt32: Column {}
-extension UInt64: Column {}
-
-extension Float: Column {}
-@available(macOS 11.0, *)
-extension Float16: Column {}
-extension Float64: Column {}
-
-extension String: Column {}
-
-extension Date: Column {}
-
-extension Optional: Column where Wrapped: Column {}
-
-extension Array: Column where Element: Column {}
-
-extension Set: Column where Element: Column {}
+    /// Check equality.
+    /// - Parameters:
+    ///   - lhs: Left side value.
+    ///   - rhs: Right side value.
+    /// - Returns: true if both name and dtype are same.
+    public static func == (lhs: Column, rhs: Column) -> Bool {
+        (lhs.name == rhs.name) && (lhs.dtype == rhs.dtype)
+    }
+}

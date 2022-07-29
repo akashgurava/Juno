@@ -5,7 +5,6 @@ included:
 excluded:
     - .build
     - Package.swift
-    - Tests
 
 line_length:
     warning: 88

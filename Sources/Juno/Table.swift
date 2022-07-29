@@ -1,5 +1,3 @@
-import OrderedCollections
-
 /// A 2D structure.
 public protocol Table: Codable {}
 
@@ -7,16 +5,15 @@ extension Table {
     /// Get table schema.
     public var schema: Schema {
         let mirror = Mirror(reflecting: self)
-        let columnArray: [(String, Column)] = mirror.children.compactMap { prop in
+        let columns: [Column] = mirror.children.compactMap { prop in
             guard let label = prop.label else {
                 return nil
             }
-            guard let type = prop.value as? Column else {
+            guard let type = prop.value as? DataType else {
                 return nil
             }
-            return (label, type)
+            return Column(name: label, value: type)
         }
-        let columnDict = OrderedDictionary(uniqueKeysWithValues: columnArray)
-        return Schema(columnDict)
+        return Schema(columns)
     }
 }

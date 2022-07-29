@@ -1,5 +1,3 @@
-import OrderedCollections
-
 /// Table schema.
 public struct Schema: CustomStringConvertible {
     /// Max characters of Column name to print.
@@ -7,8 +5,6 @@ public struct Schema: CustomStringConvertible {
     /// Max characters of Column type to print.
     private let maxColTypeLen: Int = 20
 
-    /// Inner data.
-    private var inner: OrderedDictionary<String, Column>
     /// Header when printing.
     private var header: String {
         let nameHead = String(repeating: "*", count: maxColNameLen)
@@ -21,14 +17,20 @@ public struct Schema: CustomStringConvertible {
         "\(header)\n\(header)"
     }
 
-    /// Column names.
-    public var columns: [String] {
-        Array(inner.keys)
+    /// Columns in this schema.
+    public var columns: [Column]
+
+    /// Create from inner schema data.
+    /// - Parameter schemaData: Dictionary of Column name to column.
+    public init(_ columns: [Column]) {
+        self.columns = columns
     }
 
     /// Create from inner schema data.
     /// - Parameter schemaData: Dictionary of Column name to column.
-    public init(_ schemaData: OrderedDictionary<String, Column>) {
-        self.inner = schemaData
+    public init(_ schema: [(String, DataType)]) {
+        self.columns = schema.map { name, dtype in
+            Column(name: name, dtype: type(of: dtype))
+        }
     }
 }
