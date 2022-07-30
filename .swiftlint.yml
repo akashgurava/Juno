@@ -5,6 +5,7 @@ included:
 excluded:
     - .build
     - Package.swift
+    - Tests/JunoTests/Setup.swift
 
 line_length:
     warning: 88

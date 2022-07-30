@@ -28,9 +28,11 @@ public enum Timer {
     /// Measure a function.
     /// - Parameter callable: Function
     /// - Returns: Time taken in nanoseconds.
-    public static func measure(_ callable: () -> Void) -> UInt64 {
+    public static func measure(_ callable: () throws -> Void) -> UInt64? {
         let start = DispatchTime.now().uptimeNanoseconds
-        callable()
+        guard (try? callable()) != nil else {
+            return nil
+        }
         return DispatchTime.now().uptimeNanoseconds - start
     }
 
@@ -40,9 +42,9 @@ public enum Timer {
     ///   - loops: Number of loops to execute.
     ///   - callable: Function whose time needs to be measured
     /// - Returns: Array of time taken for each loop.
-    public static func measure(loops: Int, callable: () -> Void) -> [UInt64] {
-        callable()
-        return (0..<loops).map { _ in
+    public static func measure(loops: Int, callable: () throws -> Void) -> [UInt64] {
+        try? callable()
+        return (0..<loops).compactMap { _ in
             Self.measure(callable)
         }
     }
@@ -50,9 +52,9 @@ public enum Timer {
     /// Suggest optimal number of loops.
     /// - Parameter callable: Timing function.
     /// - Returns: Number of loops.
-    public static func suggestLoops(callable: () -> Void) -> Int {
-        for index in 0..<10 {
-            let number = Int(pow(10.0, Double(index)))
+    public static func suggestLoops(callable: () throws -> Void) -> Int {
+        for index in 1...10 {
+            let number = Int(pow(10.0, Double(index - 1)))
             let timeTaken = Self.measure(loops: number, callable: callable)
             // Until timeTaken > 1 second
             if timeTaken.total >= UInt64(1e9) {
@@ -103,13 +105,15 @@ public struct TimeitResult: CustomStringConvertible {
     let loops: Int
     /// Number of iterations
     let iterations: Int
+    /// Actual number of time callable ran successfully.
+    let successCount: Int
     /// Time taken per loop per iteration.
     let iterLoopTimes: [[UInt64]]
 
     /// Time taken per iteration.
-    let totalIterTime: [UInt64]
+    let perIterTime: [UInt64]
     /// Mean time taken per loop in a iteration.
-    let meanLoopTimes: [Double]
+    let perIterMeanTime: [Double]
 
     /// Time taken for total execution.
     let total: UInt64
@@ -131,7 +135,9 @@ public struct TimeitResult: CustomStringConvertible {
     /// String representation.
     public var description: String {
         let desc = """
-            \(label): Loops: \(loops). Iterations: \(iterations).
+            \(label): Loops: \(loops). \
+            Iterations: \(iterations). \
+            Success count: \(successCount).
                 Total time taken: \(formatTime(precision: precision, total)). \
             Mean: \(formatTime(precision: precision, mean)). \
             Std Dev: \(formatTime(precision: precision, stdDev)).
@@ -166,21 +172,32 @@ public struct TimeitResult: CustomStringConvertible {
         self.label = label
         self.loops = loops
         self.iterations = iterations
+        self.successCount = iterLoopTimes.map { $0.count }.reduce(.zero, +)
         self.iterLoopTimes = iterLoopTimes
 
-        self.totalIterTime = iterLoopTimes.map { $0.total }
-        self.meanLoopTimes = iterLoopTimes.map { $0.mean }
+        self.perIterTime = iterLoopTimes.map { $0.total }
+        self.perIterMeanTime = iterLoopTimes.map { $0.mean }
 
-        self.total = totalIterTime.reduce(0, +)
-        self.mean = meanLoopTimes.mean
-        let mean = meanLoopTimes.mean
+        let mean = perIterMeanTime.mean
+        self.total = perIterTime.reduce(0, +)
+        self.mean = mean
         self.stdDev = sqrt(
             iterLoopTimes.joined().map { pow(Double($0) - mean, 2) }.reduce(.zero, +)
                 / Double(loops * iterations)
         )
 
-        self.best = Double(meanLoopTimes.min() ?? 0) / Double(loops)
-        self.worst = Double(meanLoopTimes.max() ?? 0) / Double(loops)
+        self.best = Double(
+            iterLoopTimes.min { left, right -> Bool in
+                left.min() ?? 0 < right.min() ?? 0
+            }?
+            .min() ?? 0
+        )
+        self.worst = Double(
+            iterLoopTimes.max { left, right -> Bool in
+                left.max() ?? 0 < right.max() ?? 0
+            }?
+            .max() ?? 0
+        )
         self.diff = round(worst * 100 / best) / 100
         if diff > 2 {
             self.warning = """
@@ -209,24 +226,24 @@ public struct TimeitResult: CustomStringConvertible {
 /// - Parameter:
 ///    - loops: Number of times to execute the function in a loop. If loops is not
 ///        provided, loops is determined so as to get sufficient accuracy.
-///    - repetitions: Number of repetitions of loops of the function to average.
+///    - iterations: Number of repetitions of loops of the function to average.
 ///    - precision: How many digits of precision to print
 ///    - f: The function to time
 public func timeit(
     label: String,
     loops: Int? = nil,
-    repetitions: Int = 7,
+    iterations: Int = 7,
     precision: Int = 3,
-    _ callable: () -> Void
+    _ callable: () throws -> Void
 ) {
     let loops = loops ?? Timer.suggestLoops(callable: callable)
-    let iterLoopTimes: [[UInt64]] = (0..<repetitions).map { _ in
+    let iterLoopTimes: [[UInt64]] = (0..<iterations).map { _ in
         Timer.measure(loops: loops, callable: callable)
     }
     let result = TimeitResult(
         label: label,
         loops: loops,
-        iterations: repetitions,
+        iterations: iterations,
         iterLoopTimes: iterLoopTimes,
         precision: precision
     )

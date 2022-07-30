@@ -1,10 +1,11 @@
 import Foundation
 
 /// Json Storage.
-public struct JsonStore: Store {
+public struct JsonStore<T: Table>: Store {
     /// Path of Json store.
     private let path: String
     private let decoder = JSONDecoder()
+    private let encoder = JSONEncoder()
 
     /// Create new JsonStore at path.
     /// - Parameter path: Location of store.
@@ -12,11 +13,17 @@ public struct JsonStore: Store {
         self.path = path
     }
 
-    /// Store object.
-    /// - Parameter object:
-    public func store<T: Table>(object: T) throws {
+    /// Read file at `self.path`.
+    /// - Returns: Array of objects.
+    public func read() throws -> [T] {
         let data = try Data(path: path)
-        var objects = try decoder.decode([T].self, from: data)
-        objects.append(object)
+        return try decoder.decode([T].self, from: data)
+    }
+
+    /// Write to file at `self.path`.
+    /// - Returns: Array of objects.
+    public func write(_ objects: [T]) throws {
+        let data = try objects.toJSONData(encoder)
+        try data.write(to: path)
     }
 }

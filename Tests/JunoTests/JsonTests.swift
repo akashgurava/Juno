@@ -3,28 +3,28 @@ import XCTest
 
 /// Test JSON Functionality.
 public class JsonTests: XCTestCase {
-    private let smallFile = "/Users/akash/small-file.json"
-    private let largeFile = "/Users/akash/large-file.json"
+    /// Test reading JSON file.
+    func testReadJson() throws {
+        let store = JsonStore<SfCityLot>(path: kSmallFile)
+        XCTAssertNoThrow(try store.read())
 
-    /// Test JSON Encoding.
-    func testEncode() {
-        timeit(label: "STRING_READ_SMALL_FILE") {
-            try! String(contentsOfFile: smallFile)
+        timeit(label: "JSON_STORE_READ_SMALL_FILE") {
+            let store = JsonStore<SfCityLot>(path: kSmallFile)
+            _ = try store.read()
         }
     }
 
-    // func testReadJson() throws {
-    //     struct Actor: Table {
-    //         let id: Int
-    //     }
-    //     struct Msg: Table {
-    //         let id: String
-    //         let type: String
-    //         let actor: Actor
-    //     }
-    //     let actor = Actor(id: 22)
-    //     let msg = Msg(id: "jik", type: "mks", actor: actor)
-    //     let store = JsonStore(path: "/Users/akash/large-file.json")
-    //     try store.store(object: msg)
-    // }
+    /// Test reading JSON file.
+    func testWriteJson() throws {
+        let readStore = JsonStore<SfCityLot>(path: kSmallFile)
+        let data = try readStore.read()
+
+        let store = JsonStore<SfCityLot>(path: kSmallFileGen)
+        XCTAssertNoThrow(try store.write(data))
+
+        timeit(label: "JSON_STORE_WRITE_SMALL_FILE") {
+            let store = JsonStore<SfCityLot>(path: kSmallFileGen)
+            try store.write(data)
+        }
+    }
 }
