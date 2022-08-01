@@ -11,7 +11,12 @@
         "IFLNK",
         "IFMT",
         "IFREG",
+        "junorust",
+        "serde",
+        "struct",
         "swiftlint",
-        "timeit"
+        "thiserror",
+        "timeit",
+        "uniffi"
     ]
 }

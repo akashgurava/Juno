@@ -7,3 +7,10 @@ DerivedData/
 .swiftpm/config/registries.json
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
+
+# Added for rust
+
+/Sources/JunoRust
+/target
+/generated
+Cargo.lock

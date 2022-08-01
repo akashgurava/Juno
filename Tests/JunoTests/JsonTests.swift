@@ -1,4 +1,5 @@
 import Juno
+import JunoRust
 import XCTest
 
 /// Test JSON Functionality.
@@ -15,6 +16,14 @@ public class JsonTests: XCTestCase {
         timeit(label: "JSON_STORE_READ_MID_FILE", iterations: 3) {
             let store = JsonStore<SfCityLot>(path: kMidFile)
             _ = try store.read()
+        }
+
+        timeit(label: "SERDE_READ_SMALL_FILE") {
+            _ = try readMid(path: kSmallFile)
+        }
+
+        timeit(label: "SERDE_READ_MID_FILE") {
+            _ = try readMid(path: kMidFile)
         }
     }
 

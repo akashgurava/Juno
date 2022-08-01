@@ -6,6 +6,7 @@ excluded:
     - .build
     - Package.swift
     - Tests/JunoTests/Setup.swift
+    - Sources/JunoRust
 
 line_length:
     warning: 88

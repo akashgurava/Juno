@@ -31,9 +31,14 @@ let package = Package(
         // A target can define a module or a test suite.
         // Targets can depend on other targets in this package,
         // and on products in packages this package depends on.
+        .binaryTarget(name: "JunoRustFFI", path: "generated/JunoRustFFI.xcframework"),
+        .target(
+            name: "JunoRust",
+            dependencies: ["JunoRustFFI"]
+        ),
         .target(
             name: "Juno",
-            dependencies: []
+            dependencies: ["JunoRust"]
         ),
         .testTarget(
             name: "JunoTests",
