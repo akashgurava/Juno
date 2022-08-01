@@ -1,5 +1,6 @@
 {
     "cSpell.words": [
+        "bindgen",
         "citylots",
         "dtype",
         "fclose",
@@ -12,11 +13,13 @@
         "IFMT",
         "IFREG",
         "junorust",
+        "rustup",
         "serde",
         "struct",
         "swiftlint",
         "thiserror",
         "timeit",
-        "uniffi"
+        "uniffi",
+        "xcframework"
     ]
 }
