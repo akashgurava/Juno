@@ -12,6 +12,10 @@ public class JsonTests: XCTestCase {
             let store = JsonStore<SfCityLot>(path: kSmallFile)
             _ = try store.read()
         }
+        timeit(label: "JSON_STORE_READ_MID_FILE", iterations: 3) {
+            let store = JsonStore<SfCityLot>(path: kMidFile)
+            _ = try store.read()
+        }
     }
 
     /// Test reading JSON file.
