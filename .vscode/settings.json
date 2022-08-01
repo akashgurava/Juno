@@ -8,6 +8,7 @@
         "fread",
         "fstat",
         "fwrite",
+        "Gurava",
         "IFLNK",
         "IFMT",
         "IFREG",
