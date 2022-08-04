@@ -5,3 +5,10 @@ namespace JunoRust {
 enum JunoRustError {
   "FileReadError",
 };
+
+callback interface Table {};
+
+interface JsonStore {
+  constructor(string path);
+};
+
