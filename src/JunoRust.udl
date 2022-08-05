@@ -1,6 +1,6 @@
 namespace JunoRust {
-    [Throws=JunoRustError]
-    sequence<SfCityLot> read_json(string path);
+    void start_server();
+    void stop_server();
 };
 
 [Error]
@@ -9,24 +9,3 @@ enum JunoRustError {
   "SerializeError",
 };
 
-dictionary Geometry {
-    string type_field;
-    sequence<sequence<sequence<f64>>> coordinates;
-};
-
-dictionary Properties {
-    string? street;
-    string blklot;
-    string? to_st;
-    string lot_num;
-    string block_num;
-    string mapblklot;
-    string? odd_even;
-    string? from_st;
-};
-
-dictionary SfCityLot {
-    string type_field;
-    Properties properties;
-    Geometry? geometry;
-};
