@@ -1,3 +1,5 @@
+@_exported import JunoRust
+
 /// A 2D structure.
 public protocol Table: Codable {}
 

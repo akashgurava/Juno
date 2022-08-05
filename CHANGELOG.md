@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Working Rust-Swift integration using UniFFI.
+
 ## 0.0.1 Release Notes (2022-08-01)
 
 ### Enhancements
