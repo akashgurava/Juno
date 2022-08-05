@@ -9,3 +9,7 @@ DerivedData/
 .netrc
 
 .swiftpm
+generated
+target
+JunoRust
+Cargo.lock

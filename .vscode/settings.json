@@ -13,6 +13,7 @@
         "IFMT",
         "IFREG",
         "swiftlint",
-        "timeit"
+        "timeit",
+        "xcframework"
     ]
 }

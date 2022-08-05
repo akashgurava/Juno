@@ -25,6 +25,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
+        .package(path: "./JunoRust")
     ],
     targets: [
         // Targets are the basic building blocks of a package.
@@ -33,7 +34,7 @@ let package = Package(
         // and on products in packages this package depends on.
         .target(
             name: "Juno",
-            dependencies: []
+            dependencies: ["JunoRust"]
         ),
         .testTarget(
             name: "JunoTests",

@@ -5,6 +5,7 @@ included:
 excluded:
     - .build
     - Package.swift
+    - JunoRust
     - Tests/JunoTests/Setup.swift
 
 line_length:
