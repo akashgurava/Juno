@@ -1,3 +1,3 @@
 # Juno
 
-A description of this package.
+A Datastore for Apple platforms.
