@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## 0.0.1 Release Notes (2022-08-01)
+## 0.1.0 Release Notes (2022-08-01)
 
 ### Enhancements
 
