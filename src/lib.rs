@@ -1,9 +1,21 @@
 #[swift_bridge::bridge]
 mod ffi {
+
+    #[swift_bridge(swift_repr = "struct")]
+    pub struct SharedData {
+        id: u8,
+        name: String,
+    }
+
     extern "Rust" {
-        fn hello_rust() -> String;
+        fn make_data() -> SharedData;
     }
 }
-fn hello_rust() -> String {
-    String::from("Hello from Rust!")
+use ffi::SharedData;
+
+fn make_data() -> SharedData {
+    SharedData {
+        id: 90,
+        name: "".into(),
+    }
 }
