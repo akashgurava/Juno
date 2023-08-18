@@ -1,5 +1,15 @@
-// import Juno
-// import XCTest
+ import Juno
+ import XCTest
+
+class Man: PersonProtocol {
+    func greet() {
+        <#code#>
+    }
+    
+    func name() -> String {
+        ""
+    }
+}
 
 // private struct TestTable: Table {
 //     /// Sample string column.
@@ -8,10 +18,11 @@
 //     let value: Int64
 // }
 
-// /// Tests for Juno package.
-// internal final class JunoTests: XCTestCase {
-//     /// Test example.
-//     func testExample() throws {
+ /// Tests for Juno package.
+ internal final class JunoTests: XCTestCase {
+     /// Test example.
+     func testExample() throws {
+         greet(person: Man())
 //         struct TestTableEmpty: Table {}
 
 //         XCTAssertNoThrow(TestTableEmpty())
@@ -28,5 +39,5 @@
 //                 Column(name: "Value", dtype: Int64.self),
 //             ]
 //         )
-//     }
-// }
+     }
+ }

@@ -2,19 +2,31 @@
 #
 # This script builds the Rust crate in its directory into a staticlib XCFramework for iOS.
 
+set -o errexit
+set -o pipefail
+
 BUILD_PROFILE="release"
 FRAMEWORK_NAME="JunoRust"
+
+if [[ "$FRAMEWORK_NAME" == "" ]] || [[ "$FRAMEWORK_NAME" == "starter" ]] ; then
+  echo "Please change framework name."
+  exit 1
+fi
 
 WORKING_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 TARGET_DIR="$WORKING_DIR/target"
 GENERATED_DIR="$WORKING_DIR/generated"
-HEADERS_DIR=${GENERATED_DIR}/headers
-SWIFT_DIR="${WORKING_DIR}/Sources/${FRAMEWORK_NAME}"
+HEADERS_DIR=$GENERATED_DIR/headers
+SWIFT_DIR="$WORKING_DIR/Sources/$FRAMEWORK_NAME"
 
 CARGO="$HOME/.cargo/bin/cargo"
 MANIFEST_PATH="$WORKING_DIR/Cargo.toml"
 FRAMEWORK_FILENAME="$GENERATED_DIR/${FRAMEWORK_NAME}FFI.xcframework"
 
+echo "********************************************************************************"
+echo "Building Rust project to xcframework."
+echo "Config for current build."
+echo "****************************************"
 echo "BUILD_PROFILE: $BUILD_PROFILE"
 echo "FRAMEWORK_NAME: $FRAMEWORK_NAME"
 
@@ -41,10 +53,23 @@ else
 fi
 
 LIB_NAME="lib${CRATE_NAME}.a"
+HEADER_NAME="$HEADERS_DIR/${CRATE_NAME}.h"
+MODULEMAP_NAME="$HEADERS_DIR/module.modulemap"
 LIB_NAME_IOS="$GENERATED_DIR/lib${CRATE_NAME}_ios.a"
 LIB_NAME_IOS_SIM="$GENERATED_DIR/lib${CRATE_NAME}_iossimulator.a"
 LIB_NAME_MAC="$GENERATED_DIR/lib${CRATE_NAME}_macos.a"
 echo "LIB_NAME: $LIB_NAME"
+echo "****************************************"
+
+echo "Cleaning temp and existing xcframefork file."
+
+rm -f "$LIB_NAME_IOS"
+rm -f "$LIB_NAME_IOS_SIM"
+rm -f "$LIB_NAME_MAC"
+rm -f "$MODULEMAP_NAME"
+rm -rf "$FRAMEWORK_FILENAME"
+echo "Cleaning temp and existing xcframefork file. Complete."
+echo "****************************************"
 
 ####
 ##
@@ -56,6 +81,7 @@ echo "LIB_NAME: $LIB_NAME"
 # It's important that we don't let environment variables from the user's default
 # desktop build environment leak into the iOS build, otherwise it might e.g.
 # link against the desktop build of NSS.
+echo "Building rust for required targets."
 
 DEFAULT_RUSTFLAGS=""
 BUILD_ARGS=(build --manifest-path "$MANIFEST_PATH" --lib)
@@ -103,14 +129,15 @@ echo "Processed M1 Mac."
 # Intel Mac
 cargo_build x86_64-apple-darwin
 echo "Processed Intel Mac."
-
+echo "Building rust for required targets. Complete."
+echo "****************************************"
 ###
 #
 # 2) Stitch the individual builds together an XCFramework bundle.
 #
 ###
+echo "Binding statlic lib to lipo."
 
-rm -rf $GENERATED_DIR
 mkdir -p $GENERATED_DIR
 
 cp "$TARGET_DIR/aarch64-apple-ios/$BUILD_PROFILE/$LIB_NAME" "$LIB_NAME_IOS"
@@ -125,7 +152,10 @@ lipo -create \
   "$TARGET_DIR/aarch64-apple-darwin/$BUILD_PROFILE/$LIB_NAME" \
   "$TARGET_DIR/x86_64-apple-darwin/$BUILD_PROFILE/$LIB_NAME"
 
-uniffi-bindgen generate "$WORKING_DIR/src/junorust.udl" --no-format --language swift --out-dir ${GENERATED_DIR}
+# Build the xcframework
+
+cargo run --bin uniffi-bindgen generate --library "$LIB_NAME_IOS" --language swift --out-dir ${GENERATED_DIR}
+
 
 # Move them to the right place
 mkdir -p ${HEADERS_DIR}
@@ -135,8 +165,6 @@ mv ${GENERATED_DIR}/*.h ${HEADERS_DIR}
 mv ${GENERATED_DIR}/*.swift ${SWIFT_DIR}
 # Rename and move modulemap to the right place
 mv ${GENERATED_DIR}/*.modulemap ${HEADERS_DIR}/module.modulemap
-
-# Build the xcframework
 
 if [ -d "$FRAMEWORK_FILENAME" ]; then rm -rf "$FRAMEWORK_FILENAME"; fi
 
@@ -148,3 +176,5 @@ xcodebuild -create-xcframework \
   -library "$LIB_NAME_MAC" \
   -headers ${HEADERS_DIR} \
   -output "$FRAMEWORK_FILENAME"
+echo "Binding statlic lib to lipo. Complete."
+echo "********************************************************************************"

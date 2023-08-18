@@ -1,16 +1,13 @@
-use std::fs::read;
+use std::sync::Arc;
 
-pub mod error;
-pub mod types;
+uniffi::setup_scaffolding!();
 
-pub use error::JunoRustError;
-
-pub use types::{Geometry, Properties, SfCityLot};
-
-pub fn read_json(path: String) -> Result<Vec<SfCityLot>, JunoRustError> {
-    let data = read(path)?;
-    let data: Vec<SfCityLot> = serde_json::from_slice(&data)?;
-    Ok(data)
+#[uniffi::export]
+pub trait Person: Send + Sync + std::fmt::Debug {
+    fn name(&self) -> String;
 }
 
-uniffi_macros::include_scaffolding!("JunoRust");
+#[uniffi::export]
+pub fn greet(table: Arc<dyn Person>) {
+    println!("Hello!! {}", table.name())
+}
